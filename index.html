@@ -33,8 +33,11 @@
           <a href="javascript:void(0)" onclick="Reveal.slide(document.getElementsByClassName('slides')[0].childNodes.length)">last slide</a>
         </section>
         <section>
-          <h1>This talk was inspired by...</h1>
+          <h1>1. Sound</h1>
         </section>
+				<section>
+					<img data-src="/static/v.jpg" class="stretch" />
+				</section>
         <section>
           <iframe data-src="https://teropa.info/blog/2016/07/28/javascript-systems-music.html" class="stretch"></iframe>
           <aside class="notes">
@@ -42,7 +45,7 @@
           </aside>
         </section>
         <section>
-          <iframe data-src="https://teropa.info/blog/2016/07/28/javascript-systems-music.html#exploring-variations-on-music-for-airports" class="stretch"></iframe>
+          <iframe data-src="http://localhost:8080/repeat.html" class="stretch"></iframe>
           <aside class="notes">
             <p>The author of this post does a great job of introducing the concepts I’m going to be talking about tonight, so I’ll play his second demo -- his implementation of Music for Airports #2 -- while I read a quick excerpt from his introduction.</p>
 
@@ -153,45 +156,35 @@
           </aside>
         </section>
         <section>
-          <pre class="stretch"><code data-trim class="javascript" contenteditable="true">
-            function preloadNote(p5,instrument,note) {
+          <pre><code data-trim class="javascript" contenteditable="true">
+            function preloadNote(p5,instrument,note,cb) {
               const nearestSample = audioUtils.getNearestSample(instrument,note);
               const noteDistance = audioUtils.getNoteDistance(note,nearestSample)
               note.pitchAdjust = audioUtils.getPlaybackRate(noteDistance);
 
-              note.sample = p5.loadSound(nearestSample.file, () => {
-                setupNote(note);
-              });
-
+              note.sample = p5.loadSound(nearestSample.file, cb);
               note.sample.playMode('restart');
-            }
-
-            function setupNote(note) {
-              note.duration = Math.min(note.duration,note.sample.duration() * 1 / note.pitchAdjust);
-
-              const env = new P5.Env();
-              note.sample.amp(env);
-              note.envelope = env;
-
-              const amp = new P5.Amplitude();
-              amp.setInput(note.sample);
-              note.curAmplitude = amp;
             }
           </code></pre>
           <aside class="notes">
-            These two functions abstract all the hard work of playing an arbitrary note: first, we get the sample nearest to the desired note, and calculate the pitch adjustment. Then we use the P5 library to load the sample into the user’s browser. The loadSound function accepts a callback function, which we use to set up some more details about the note: we make sure we’re not trying to play the note for longer than the sample’s duration, and then we create two more P5 objects and attach them to the note. The Envelope (P5.Env) makes it easier to define the note’s volume function, and the Amplitude (P5.Amplitude) lets us read the volume at any point during the sample’s playback (there’s not a one-to-one correspondence between the two because of the natural variations in the samples from being played by a human).
+            This function abstracts all the hard work of playing an arbitrary note: first, we get the sample nearest to the desired note, and calculate the pitch adjustment. Then we use the P5 library to load the sample into the user’s browser. The loadSound function accepts a callback function, which we use to set up some more details about the note: we make sure we’re not trying to play the note for longer than the sample’s duration, and then we create two more P5 objects and attach them to the note. The Envelope (P5.Env) makes it easier to define the note’s volume function, and the Amplitude (P5.Amplitude) lets us read the volume at any point during the sample’s playback (there’s not a one-to-one correspondence between the two because of the natural variations in the samples from being played by a human).
           </aside>
         </section>
         <section>
-          <pre><code data-trim class="javascript" contenteditable="true">
-            function playNote(note,delay,rate) {
-              note.envelope.setADSR(delay + 0.001, 0.2, note.amplitude, note.duration);
-              note.envelope.setRange(note.amplitude, 0);
+					<section>
+						<pre><code data-trim class="javascript" contenteditable="true">
+	            function playNote(note,delay,rate) {
+	              note.envelope.setADSR(delay + 0.001, 0.2, note.amplitude, note.duration);
+	              note.envelope.setRange(note.amplitude, 0);
 
-              note.sample.play(delay,(rate || 1) * note.pitchAdjust);
-              note.envelope.play(note.sample);
-            }
-          </code></pre>
+	              note.sample.play(delay,(rate || 1) * note.pitchAdjust);
+	              note.envelope.play(note.sample);
+	            }
+	          </code></pre>
+					</section>
+					<section>
+						<img data-src="/static/adsr.jpg" class="stretch"/>
+					</section>
           <aside class="notes">
             Now playing the note is as simple as setting a few settings on the note’s envelope, then starting the sample and the envelope.
           </aside>
@@ -208,7 +201,7 @@
           </section>
         </section>
         <section>
-          <h1>Let's talk about <span style="color:#ed225d">p5</span></h1>
+          <h1>2. Visuals</h1>
         </section>
         <section>
           <pre><code data-trim class="javascript" contenteditable="true">
@@ -226,22 +219,23 @@
           </code></pre>
         </section>
         <section>
-          <h2><em>Instance Mode</em> so we don't have to pollute <code>window</code></h2>
-          <pre><code data-trim class="javascript" contenteditable="true">
-            const P5 = require('p5');
+          <h2>Instance Mode</h2>
+					<div class="livecode stretch no-console">
+	          <pre><code data-trim class="javascript" contenteditable="true">//const P5 = require('p5');
 
-            function sketch(p5) {
-              p5.setup = () => {
-                p5.noLoop();
-              }
-
-              p5.draw = () => {
-                p5.ellipse(50, 50, 80, 80);
-              }
-            }
-
-            new P5(sketch,'container');
-          </code></pre>
+function sketch(myp5) {
+  myp5.setup = () => {}
+  myp5.draw = () => {
+    myp5.ellipse(50, 50, 80, 80);
+  }
+}
+//new P5(sketch,'container');
+new p5(sketch,'container');</code></pre>
+						<pre><code class="html">
+              <style>canvas {border: 1px solid black;}</style>
+              <script src="/static/p5.js"></script>
+            </code></pre>
+					</div>
         </section>
         <section>
           <h1>Color</h1>
@@ -263,18 +257,19 @@
             p5.ellipse(x,y,w,[h]);
             p5.rect(x,y,w,h);
             p5.line(x1,y1,x2,y2);
+            p5.triangle(x1,y1,x2,y2,x3,y3);
           </code></pre>
         </section>
         <section>
           <div class="livecode stretch no-console">
-            <pre><code data-trim class="javascript" contenteditable="true">function sketch(myp5) {
-  myp5.draw = () => {
-    myp5.stroke('black').noFill();
-    myp5.ellipse(25,25,40,30);
-    myp5.fill('lightblue');
-    myp5.rect(10,20,25,20);
-    myp5.stroke('red');
-    myp5.line(5,10,40,45);
+            <pre><code data-trim class="javascript" contenteditable="true">function sketch(p5) {
+  p5.draw = () => {
+    p5.stroke('black').noFill();
+    p5.ellipse(25,25,40,30);
+  	p5.fill('lightblue');
+    p5.rect(10,20,25,20);
+    p5.stroke('red');
+    p5.line(5,10,40,45);
   }
 }
 
@@ -282,38 +277,43 @@ new p5(sketch);
             </code></pre>
             <pre><code class="html">
               <style>canvas {border: 1px solid black;}</style>
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.12/p5.js"></script>
+              <script src="/static/p5.js"></script>
             </code></pre>
           </div>
         </section>
         <section>
-          <h1>Interaction</h1>
-          <pre><code data-trim class="javascript" contenteditable="true">
-            p5.keyPressed() = () => {
-              //do something
-            }
-            p5.mouseClicked() = () => {
-              //do something
-            }
-          </code></pre>
-        </section>
+					<section>
+						<h1>Interaction</h1>
+	          <pre><code data-trim class="javascript" contenteditable="true">
+	            p5.keyPressed() = () => {
+	              //do something
+	            }
+	            p5.mouseClicked() = () => {
+	              //do something
+	            }
+	          </code></pre>
+					</section>
+					<section>
+						<iframe data-src="http://localhost:8080/sound/" class="stretch"></iframe>
+					</section>
+				</section>
         <section>
           <div class="livecode stretch no-console">
-            <pre><code data-trim class="javascript" contenteditable="true">function sketch(myp5) {
+            <pre><code data-trim class="javascript" contenteditable="true">function sketch(p5) {
   let hue = 0;
-  myp5.setup = () => {myp5.colorMode(myp5.HSB);}
-  myp5.draw = () => {
-    myp5.fill(hue, 100, 100);
-    myp5.rect(10, 10, 80, 80);
+  p5.setup = () => {p5.colorMode(p5.HSB);}
+  p5.draw = () => {
+    p5.fill(hue, 100, 100);
+    p5.rect(10, 10, 80, 80);
   }
-  myp5.mouseClicked = () => {
-    hue = myp5.random() * 360;
+  p5.mouseClicked = () => {
+    hue = p5.random() * 360;
   }
 }
 new p5(sketch);</code></pre>
             <pre><code class="html">
             <style>canvas {border: 1px solid black;}</style>
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.12/p5.js"></script>
+              <script src="/static/p5.js"></script>
             </code></pre>
           </div>
         </section>
@@ -335,14 +335,10 @@ new p5(sketch);</code></pre>
 new p5(sketch);</code></pre>
             <pre><code class="html">
               <style>canvas {border: 1px solid black;}</style>
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.12/p5.js"></script>
+              <script src="/static/p5.js"></script>
             </code></pre>
           </div>
         </section>
-				<section>
-					<h1>Back to Mr. Cage</h1>
-					<img data-src="/static/cage.jpg" class="stretch"/>
-				</section>
 				<section>
 					<img data-src="/static/transparency.png" class="stretch" style="background:white;"/>
 				</section>
