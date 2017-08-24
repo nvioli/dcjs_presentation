@@ -135,6 +135,34 @@
             The most common way to tune instruments in the western tradition is called the equal temperament system, because all the notes are an equal distance from each other. Furthermore, to move from a note to the same note in the next octave, you simply double the frequency. There are 12 notes in an octave, so the bottom formula here gives the relationship between two notes m semitones apart. Therefore, if we adjust the speed of a sample by precisely that amount, the resulting playback will be exactly the desired note!
           </aside>
         </section>
+				<section>
+					<pre><code data-trim class="javascript stretch" contenteditable="true">
+						exports.samples = {
+					  '1st Violins': [
+					    {pitch: 'A#', octave: 3, file: 'Samples/1st Violins/1st-violins-sus-a%233.wav'},
+					    {pitch: 'A#', octave: 4, file: 'Samples/1st Violins/1st-violins-sus-a%234.wav'},
+							//...
+					    {pitch: 'G', octave: 5, file: 'Samples/1st Violins/1st-violins-sus-g5.wav'},
+					    {pitch: 'G', octave: 6, file: 'Samples/1st Violins/1st-violins-sus-g6.wav'}
+					  ],
+					  '2nd Violins': [
+					    {pitch: 'A#', octave: 3, file: 'Samples/2nd Violins/2nd-violins-sus-a%233.wav'},
+							//...
+					    {pitch: 'G', octave: 6, file: 'Samples/2nd Violins/2nd-violins-sus-g6.wav'}
+					  ],
+					  'Alto Flute': [
+					    {pitch: 'A#', octave: 3, file: 'Samples/Alto Flute/alto_flute-a%233.wav'},
+							//...
+					    {pitch: 'G', octave: 6, file: 'Samples/Alto Flute/alto_flute-g6.wav'}
+					  ],
+					  'Bass Clarinet': [
+					    {pitch: 'B', octave: 2, file: 'Samples/Bass Clarinet/bass_clarinet-b2.wav'},
+							//...
+					    {pitch: 'G#', octave: 4, file: 'Samples/Bass Clarinet/bass_clarinet-g%234.wav'}
+					  ],
+						//etc.
+					</code></pre>
+				</section>
         <section>
           <pre><code data-trim class="javascript" contenteditable="true">
             const OCTAVE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -205,7 +233,7 @@
         </section>
         <section>
           <pre><code data-trim class="javascript" contenteditable="true">
-						<script src="/lib/p5.js"></script>
+						<script src="/static/p5.js"></script>
 
 						<script type="text/javascript">
 	            function setup() {
@@ -342,51 +370,131 @@ new p5(sketch);</code></pre>
 				<section>
 					<img data-src="/static/transparency.png" class="stretch" style="background:white;"/>
 				</section>
+				<section>
+					<pre><code data-trim class="javascript stretch">
+						let instruments = utils.shuffle(Object.keys(library.samples));
+
+						const pointSheet = {};
+						pointSheet[instruments[0]] = {point: geom.getPoint(86.763980938818,45.6838472914499,1)};
+						pointSheet[instruments[1]] = {point: geom.getPoint(57.3588212740319,84.2909568932464,1)};
+						//...
+						pointSheet[instruments[13]] = {point: geom.getPoint(84.9756257873692,76.4556060689051,4)};
+						pointSheet[instruments[14]] = {point: geom.getPoint(68.8859067754834,29.5557868214931,4)};
+
+						const lineSheets = [
+					  [
+					    [geom.getPoint(0,37.2330444106872),geom.getPoint(100,51.5347153963006)],
+					    [geom.getPoint(43.0632630410655,0),geom.getPoint(37.7500177108178,100)],
+					    [geom.getPoint(66.3494462417645,0),geom.getPoint(44.277044418731,100)],
+					    [geom.getPoint(100,17.6235367706192),geom.getPoint(36.4063570028574,100)],
+					    [geom.getPoint(20.6295605355751,100),geom.getPoint(0,55.7233491198284)]
+					  ],[
+					    [geom.getPoint(71.4335292212299,0),geom.getPoint(0,56.8762741100831)],
+					    [geom.getPoint(0,29.1852416048747),geom.getPoint(45.7591041599186,100)],
+					    [geom.getPoint(0,54.3246936535317),geom.getPoint(100,86.496113264186)],
+					    [geom.getPoint(0,63.5654920585139),geom.getPoint(100,35.0030242612962)],
+					    [geom.getPoint(97.8483179862107,0),geom.getPoint(65.3926241266022,100)]
+					  ],
+						//etc.
+					</code></pre>
+				</section>
+				<section>
+					<iframe data-src="https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line" class="stretch"></iframe>
+				</section>
+				<section>
+					<pre><code data-trim class="javascript stretch">
+						function getNoteFromDistance(instrument,dist) {
+						  const [lowestNote,highestNote] = audioUtils.getSampleRange(instrument);
+						  const instrumentRange = audioUtils.getNoteDistance(highestNote,lowestNote);
+						  /* Most pairs of points won't have distance over 100, so while that's not the
+						     actual maximum distance possible, it should provide us with more-or-less
+						     well-distributed notes (I think). Worst case scenario is we end up with a
+						     note higher than the top sample, but we can always pitch bend to
+						     approximate it.
+						  */
+						  const proportion = instrumentRange * dist / 100;
+						  const returnVal = Math.floor(audioUtils.noteToValue(lowestNote) + proportion);
+						  return audioUtils.valueToNote(returnVal);
+						}
+					</code></pre>
+				</section>
+				<section>
+					<pre><code data-trim class="javascript stretch">
+						function getDim() {
+						  return Math.min(p5.select('#container').width / 2,p5.windowHeight);
+						}
+
+						function resize() {
+						  p5.select('#text').size(getDim(),getDim())
+						    .style('font-size',getDim() / 22)
+						    .style('padding',getDim() / 20);
+						  p5.resizeCanvas(getDim(),getDim());
+						}
+					</code></pre>
+				</section>
+				<section>
+					<pre><code data-trim class="javascript stretch">
+						function normalize(v) {
+						  return p5.map(v,0,100,0,getDim());
+						}
+
+						function drawLine(p1,p2) {
+						  p5.line(normalize(p1.x),normalize(p1.y),normalize(p2.x),normalize(p2.y));
+						}
+
+						function drawLines(note) {
+						  Object.keys(note.lines).forEach(noteAttribute => {
+								const l = note.lines[noteAttribute]
+						    p5.stroke(colors.foreground).strokeWeight(1);
+						    drawLine(l.end1,l.end2);
+						  });
+						}
+
+						function drawNote(instrument,note) {
+						  Object.keys(note.lines).forEach(noteAttribute => {
+						    p5.stroke(colors[noteAttribute]);
+						    p5.strokeWeight(note.amplitude * 20);
+						    drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
+						  });
+						}
+					</code></pre>
+				</section>
+				<section>
+					<pre><code data-trim class="javascript stretch">
+						p5.draw ≈ () => {
+							p5.background(colors.background);
+
+							let delay = 0;
+					    score[instrument].notes.forEach(note => {
+					      audio.playNote(note,delay);
+					      delay += note.duration;
+					      drawNote(instrument,note,true,false);
+					      drawLines(note);
+					    });
+
+							Object.keys(score).forEach(inst => {
+					      const point = score[inst].point;
+					      p5.strokeWeight(point.size * 4);
+					      p5.ellipse(normalize(point.x),normalize(point.y),point.size * 4);
+					    });
+						}
+					</code></pre>
+				</section>
+				<section>
+					<iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
+				</section>
       </div>
     </div>
-    <section>
-      <h1>TODO</h1>
-      function getDim() {
-        const maxHeight = p5.windowHeight - p5.select('header').height - p5.select('footer').height;
-        return Math.min(p5.select('#container').width / 2,maxHeight);
-      }
-
-      function drawLine(p1,p2) {
-        p5.line(normalize(p1.x),normalize(p1.y),normalize(p2.x),normalize(p2.y));
-      }
-
-      function drawLines(note) {
-        Object.keys(note.lines).forEach(noteAttribute => {
-          p5.stroke(colors.foreground).strokeWeight(1);
-          drawLine(note.lines[noteAttribute].end1,note.lines[noteAttribute].end2);
-        });
-      }
-
-      function drawNote(instrument,note,attrColors,liveUpdate) {
-        Object.keys(note.lines).forEach(noteAttribute => {
-          if (attrColors) {
-            p5.stroke(colors[noteAttribute]);
-          } else {
-            p5.stroke(colors.getNoteHueValue(note),100,100,note.amplitude);
-          }
-          if (liveUpdate) {
-            p5.strokeWeight(note.curAmplitude.getLevel() * 100);
-          } else {
-            p5.strokeWeight(note.amplitude * 20);
-          }
-          // and drop a perpindicular from the point
-          drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
-        });
-      }
-    </section>
     <script src="lib/js/head.min.js"></script>
     <script src="js/reveal.js"></script>
 
-    <script>
+    <script type="text/javascript">
       // More info about config & dependencies:
       // - https://github.com/hakimel/reveal.js#configuration
       // - https://github.com/hakimel/reveal.js#dependencies
       Reveal.initialize({
+				// width: "90%",
+				// height: "90%",
         dependencies: [
           { src: 'plugin/markdown/marked.js' },
           { src: 'plugin/markdown/markdown.js' },
