@@ -27,17 +27,17 @@
   <body>
     <div class="reveal">
       <div class="slides">
-        <section>
+        <section data-background-iframe="http://localhost:8080/background.html" data-background-interactive>
           <h1>Web Audio & Visualizations with <span style="color:#ed225d">P5.js</span></h1>
           <h3>Nick Violi / dcjs / 9.14.2017</h3>
           <a href="javascript:void(0)" onclick="Reveal.slide(document.getElementsByClassName('slides')[0].childNodes.length)">last slide</a>
         </section>
-        <section>
-          <h1>1. Sound</h1>
-        </section>
 				<section>
 					<img data-src="/static/v.jpg" class="stretch" />
 				</section>
+        <section>
+          <h1>1. Sound</h1>
+        </section>
         <section>
           <iframe data-src="https://teropa.info/blog/2016/07/28/javascript-systems-music.html" class="stretch"></iframe>
           <aside class="notes">
@@ -88,51 +88,11 @@
           <h1>What do we need to build this piece?</h1>
         </section>
         <section>
-          <img data-src="/static/orchestra.jpg" class="stretch"/>
-          <aside class="notes">
-            What do we need to recreate this piece? First, we need to be able to play arbitrary notes on arbitrary instruments.
-          </aside>
-        </section>
-        <section>
           <img data-src="/static/sonatina.jpg" class="stretch"/>
           <aside class="notes">
+						<p>What do we need to recreate this piece? First, we need to be able to play arbitrary notes on arbitrary instruments.</p>
             <p>Luckily, Tero provided us with a sample library and some code to do just that. The Sonatina Symphonic Orchestra contains short, isolated samples of individual notes from 32 instruments.</p>
             <p>There’s only one catch: each instrument doesn’t have recordings of every single note; instead they just sampled 3 or 4 per octave. This decision was made to save space, and while at first it may seem that it means the sample library is useless because it’s so limited, there’s a fascinating piece of math that lets us recreate the notes we don’t have.</p>
-          </aside>
-        </section>
-        <section>
-          <h2>Just one catch</h2>
-          <pre><code data-trim class="bash">
-            $ cd Samples/Cello
-            $ ls
-            cello-a2.wav  cello-c2.wav  cello-d#2.wav  cello-f#2.wav
-            cello-a3.wav  cello-c3.wav  cello-d#3.wav  cello-f#3.wav
-            cello-a4.wav  cello-c4.wav  cello-d#4.wav  cello-f#4.wav
-            cello-a5.wav  cello-c5.wav  cello-d#5.wav  cello-f#5.wav
-          </code></pre>
-          <aside class="notes">
-            <p>There’s only one catch: each instrument doesn’t have recordings of every single note; instead they just sampled 3 or 4 per octave. This decision was made to save space, and while at first it may seem that it means the sample library is useless because it’s so limited, there’s a fascinating piece of math that lets us recreate the notes we don’t have.</p>
-          </aside>
-        </section>
-        <section>
-          <h2 style="margin:0;">Math to the rescue!</h2>
-          <img data-src="/static/scale.png"/>
-          <div class="fragment">
-            <p style="margin:0px;font-size:75%;">One octave change:</p>
-            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2 ✕ frequency</p>
-          </div>
-
-          <div class="fragment">
-            <p style="margin-bottom:0px;font-size:75%;">So <em>n</em> octave changes:</p>
-            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-25px;">2<sup><em>n</em></sup> ✕ frequency</p>
-          </div>
-
-          <div class="fragment">
-            <p style="margin-bottom:0px;font-size:75%;">There are 12 equal-spaced notes per octave, so to move by <em>m</em> notes:</p>
-            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2<sup><em>m</em>/12</sup> ✕ frequency</p>
-          </div>
-          <aside class="notes">
-            The most common way to tune instruments in the western tradition is called the equal temperament system, because all the notes are an equal distance from each other. Furthermore, to move from a note to the same note in the next octave, you simply double the frequency. There are 12 notes in an octave, so the bottom formula here gives the relationship between two notes m semitones apart. Therefore, if we adjust the speed of a sample by precisely that amount, the resulting playback will be exactly the desired note!
           </aside>
         </section>
 				<section>
@@ -164,6 +124,41 @@
 					</code></pre>
 				</section>
         <section>
+          <h2>Just one catch</h2>
+          <pre><code data-trim class="bash">
+            $ cd Samples/Cello
+            $ ls
+            cello-a2.wav  cello-c2.wav  cello-d#2.wav  cello-f#2.wav
+            cello-a3.wav  cello-c3.wav  cello-d#3.wav  cello-f#3.wav
+            cello-a4.wav  cello-c4.wav  cello-d#4.wav  cello-f#4.wav
+            cello-a5.wav  cello-c5.wav  cello-d#5.wav  cello-f#5.wav
+          </code></pre>
+          <aside class="notes">
+            <p>There’s only one catch: each instrument doesn’t have recordings of every single note; instead they just sampled 3 or 4 per octave. This decision was made to save space, and while at first it may seem that it means the sample library is useless because it’s so limited, there’s a fascinating piece of math that lets us recreate the notes we don’t have.</p>
+          </aside>
+        </section>
+        <section>
+          <h2 style="margin:0;">Math to the rescue!</h2>
+          <img data-src="/static/scale.png"/>
+          <div class="fragment">
+            <p style="margin:0px;font-size:75%;">One octave change:</p>
+            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2 ✕ frequency</p>
+          </div>
+
+          <div class="fragment">
+            <p style="margin-bottom:0px;font-size:75%;">So <em>m</em> octave changes:</p>
+            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-25px;">2<sup><em>m</em></sup> ✕ frequency</p>
+          </div>
+
+          <div class="fragment">
+            <p style="margin-bottom:0px;font-size:75%;">There are 12 equal-spaced notes per octave, so to move by <em>n</em> notes:</p>
+            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2<sup><em>n</em>/12</sup> ✕ frequency</p>
+          </div>
+          <aside class="notes">
+            The most common way to tune instruments in the western tradition is called the equal temperament system, because all the notes are an equal distance from each other. Furthermore, to move from a note to the same note in the next octave, you simply double the frequency. There are 12 notes in an octave, so the bottom formula here gives the relationship between two notes m semitones apart. Therefore, if we adjust the speed of a sample by precisely that amount, the resulting playback will be exactly the desired note!
+          </aside>
+        </section>
+        <section>
           <pre><code data-trim class="javascript" contenteditable="true">
             const OCTAVE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
@@ -185,14 +180,13 @@
         </section>
         <section>
           <pre><code data-trim class="javascript" contenteditable="true">
-            function preloadNote(p5,instrument,note,cb) {
-              const nearestSample = audioUtils.getNearestSample(instrument,note);
-              const noteDistance = audioUtils.getNoteDistance(note,nearestSample)
-              note.pitchAdjust = audioUtils.getPlaybackRate(noteDistance);
+						function preloadNote(p5,instrument,note,cb) {
+						  const nearestSample = audioUtils.getNearestSample(instrument,note);
+							const noteDistance = audioUtils.getNoteDistance(note,nearestSample);
+						  note.pitchAdjust = audioUtils.getPlaybackRate(noteDistance);
 
-              note.sample = p5.loadSound(nearestSample.file, cb);
-              note.sample.playMode('restart');
-            }
+						  note.sample = p5.loadSound(nearestSample.file, cb);
+						}
           </code></pre>
           <aside class="notes">
             This function abstracts all the hard work of playing an arbitrary note: first, we get the sample nearest to the desired note, and calculate the pitch adjustment. Then we use the P5 library to load the sample into the user’s browser. The loadSound function accepts a callback function, which we use to set up some more details about the note: we make sure we’re not trying to play the note for longer than the sample’s duration, and then we create two more P5 objects and attach them to the note. The Envelope (P5.Env) makes it easier to define the note’s volume function, and the Amplitude (P5.Amplitude) lets us read the volume at any point during the sample’s playback (there’s not a one-to-one correspondence between the two because of the natural variations in the samples from being played by a human).
@@ -201,11 +195,17 @@
         <section>
 					<section>
 						<pre><code data-trim class="javascript" contenteditable="true">
-	            function playNote(note,delay,rate) {
-	              note.envelope.setADSR(delay + 0.001, 0.2, note.amplitude, note.duration);
-	              note.envelope.setRange(note.amplitude, 0);
+	            function playNote(note,delay) {
+                const env = new P5.Env();
+  						  note.sample.amp(env);
+  						  note.envelope = env;
 
-	              note.sample.play(delay,(rate || 1) * note.pitchAdjust);
+                //env.setADSR(attackTime, decayTime, susPercent, releaseTime);
+	              note.envelope.setADSR(delay + 0.001, 0.2, note.amplitude, note.duration);
+	              //setRange(attackLevel,releaseLevel)
+                note.envelope.setRange(note.amplitude, 0);
+
+	              note.sample.play(delay,note.pitchAdjust);
 	              note.envelope.play(note.sample);
 	            }
 	          </code></pre>
@@ -246,18 +246,16 @@
 						</script>
           </code></pre>
         </section>
-        <section>
+				<section>
           <h2>Instance Mode</h2>
 					<div class="livecode stretch no-console">
-	          <pre><code data-trim class="javascript" contenteditable="true">//const P5 = require('p5');
-
-function sketch(myp5) {
-  myp5.setup = () => {}
-  myp5.draw = () => {
-    myp5.ellipse(50, 50, 80, 80);
+	          <pre><code data-trim class="javascript" contenteditable="true">function sketch(p5) {
+  p5.setup = () => {}
+  p5.draw = () => {
+    p5.ellipse(50, 50, 80, 80);
   }
 }
-//new P5(sketch,'container');
+
 new p5(sketch,'container');</code></pre>
 						<pre><code class="html">
               <style>canvas {border: 1px solid black;}</style>
@@ -265,23 +263,33 @@ new p5(sketch,'container');</code></pre>
             </code></pre>
 					</div>
         </section>
-        <section>
-          <h1>Color</h1>
+				<section>
+          <h2>Instance Mode Using Modules</h2>
           <pre><code data-trim class="javascript" contenteditable="true">
-            p5.noFill();
+						const P5 = require('p5');
 
+						function sketch(p5) {
+						  p5.setup = () => {}
+						  p5.draw = () => {
+						    p5.ellipse(50, 50, 80, 80);
+						  }
+						}
+
+						new P5(sketch,'container');
+					</code></pre>
+        </section>
+        <section>
+          <h1>Colors + Shapes</h1>
+          <pre><code data-trim class="javascript" contenteditable="true">
             p5.fill(r,g,b,[alpha]);
             p5.fill(#abcdef,[alpha]);
 
             p5.colorMode(p5.HSB);
             p5.stroke(h,s,b,[alpha]);
 
+            p5.noFill();
             p5.noStroke();
-          </code></pre>
-        </section>
-        <section>
-          <h1>Shapes</h1>
-          <pre><code data-trim class="javascript" contenteditable="true">
+
             p5.ellipse(x,y,w,[h]);
             p5.rect(x,y,w,h);
             p5.line(x1,y1,x2,y2);
@@ -313,10 +321,10 @@ new p5(sketch);
 					<section>
 						<h1>Interaction</h1>
 	          <pre><code data-trim class="javascript" contenteditable="true">
-	            p5.keyPressed() = () => {
+	            p5.keyPressed = () => {
 	              //do something
 	            }
-	            p5.mouseClicked() = () => {
+	            p5.mouseClicked = () => {
 	              //do something
 	            }
 	          </code></pre>
@@ -350,14 +358,15 @@ new p5(sketch);</code></pre>
         </section>
         <section>
           <div class="livecode stretch no-console">
-            <pre><code data-trim class="javascript" contenteditable="true">function sketch(myp5) {
+            <pre><code data-trim class="javascript" contenteditable="true">function sketch(p5) {
   let x = 0, y = 0;
-  myp5.setup = () => {myp5.colorMode(myp5.HSB)}
-  myp5.draw = () => {
-    myp5.background(255);
-	x += 1.11; y += 1;
-	myp5.fill(x % 360,100,100);
-    myp5.ellipse(x % 100,y % 100,20);
+  p5.setup = () => {p5.colorMode(p5.HSB)}
+  p5.draw = () => {
+    p5.background(255);
+	x += 1.11;
+	y += 1;
+	p5.fill(x % 360,100,100);
+    p5.ellipse(x % 100,y % 100,20);
   }
 }
 new p5(sketch);</code></pre>
@@ -375,25 +384,25 @@ new p5(sketch);</code></pre>
 						let instruments = utils.shuffle(Object.keys(library.samples));
 
 						const pointSheet = {};
-						pointSheet[instruments[0]] = {point: geom.getPoint(86.763980938818,45.6838472914499,1)};
-						pointSheet[instruments[1]] = {point: geom.getPoint(57.3588212740319,84.2909568932464,1)};
+						pointSheet[instruments[0]] = {point: {x:86.763980938818,y:45.6838472914499,1}};
+						pointSheet[instruments[1]] = {point: {x:57.3588212740319,y:84.2909568932464,1}};
 						//...
-						pointSheet[instruments[13]] = {point: geom.getPoint(84.9756257873692,76.4556060689051,4)};
-						pointSheet[instruments[14]] = {point: geom.getPoint(68.8859067754834,29.5557868214931,4)};
+						pointSheet[instruments[13]] = {point: {x:84.9756257873692,y:76.4556060689051,4}};
+						pointSheet[instruments[14]] = {point: {x:68.8859067754834,y:29.5557868214931,4}};
 
 						const lineSheets = [
 					  [
-					    [geom.getPoint(0,37.2330444106872),geom.getPoint(100,51.5347153963006)],
-					    [geom.getPoint(43.0632630410655,0),geom.getPoint(37.7500177108178,100)],
-					    [geom.getPoint(66.3494462417645,0),geom.getPoint(44.277044418731,100)],
-					    [geom.getPoint(100,17.6235367706192),geom.getPoint(36.4063570028574,100)],
-					    [geom.getPoint(20.6295605355751,100),geom.getPoint(0,55.7233491198284)]
+					    [{x:0,y:37.2330444106872},{x:100,y:51.5347153963006}],
+					    [{x:43.0632630410655,y:0},{x:37.7500177108178,y:100}],
+					    [{x:66.3494462417645,y:0},{x:44.277044418731,y:100}],
+					    [{x:100,y:17.6235367706192},{x:36.4063570028574,y:100}],
+					    [{x:20.6295605355751,y:100},{x:0,y:55.7233491198284}]
 					  ],[
-					    [geom.getPoint(71.4335292212299,0),geom.getPoint(0,56.8762741100831)],
-					    [geom.getPoint(0,29.1852416048747),geom.getPoint(45.7591041599186,100)],
-					    [geom.getPoint(0,54.3246936535317),geom.getPoint(100,86.496113264186)],
-					    [geom.getPoint(0,63.5654920585139),geom.getPoint(100,35.0030242612962)],
-					    [geom.getPoint(97.8483179862107,0),geom.getPoint(65.3926241266022,100)]
+					    [{x:71.4335292212299,y:0},{x:0,y:56.8762741100831}],
+					    [{x:0,y:29.1852416048747},{x:45.7591041599186,y:100}],
+					    [{x:0,y:54.3246936535317},{x:100,y:86.496113264186}],
+					    [{x:0,y:63.5654920585139},{x:100,y:35.0030242612962}],
+					    [{x:97.8483179862107,y:0},{x:65.3926241266022,y:100}]
 					  ],
 						//etc.
 					</code></pre>
@@ -404,33 +413,30 @@ new p5(sketch);</code></pre>
 				<section>
 					<pre><code data-trim class="javascript stretch">
 						function getNoteFromDistance(instrument,dist) {
-						  const [lowestNote,highestNote] = audioUtils.getSampleRange(instrument);
-						  const instrumentRange = audioUtils.getNoteDistance(highestNote,lowestNote);
-						  /* Most pairs of points won't have distance over 100, so while that's not the
-						     actual maximum distance possible, it should provide us with more-or-less
-						     well-distributed notes (I think). Worst case scenario is we end up with a
-						     note higher than the top sample, but we can always pitch bend to
-						     approximate it.
-						  */
+						  const [low,high] = audioUtils.getSampleRange(instrument);
+						  const instrumentRange = audioUtils.getNoteDistance(high,low);
+
 						  const proportion = instrumentRange * dist / 100;
-						  const returnVal = Math.floor(audioUtils.noteToValue(lowestNote) + proportion);
-						  return audioUtils.valueToNote(returnVal);
+						  const noteVal = Math.floor(audioUtils.noteToValue(low) + proportion);
+						  return audioUtils.valueToNote(noteVal);
+						}
+
+						//returned object forms the basis of the `note`
+						function getNoteAttributes(instrument,lines) {
+						  const noteInfo = audio.getNoteFromDistance(instrument,lines.lowestFreq.distance);
+						  return {
+						    lines,
+						    pitch: noteInfo.pitch,
+						    octave: noteInfo.octave,
+						    delay: lines.occurence.distance,
+						    amplitude: lines.amplitude.distance / 100,
+						    duration: lines.duration.distance / 10
+						  };
 						}
 					</code></pre>
 				</section>
-				<section>
-					<pre><code data-trim class="javascript stretch">
-						function getDim() {
-						  return Math.min(p5.select('#container').width / 2,p5.windowHeight);
-						}
-
-						function resize() {
-						  p5.select('#text').size(getDim(),getDim())
-						    .style('font-size',getDim() / 22)
-						    .style('padding',getDim() / 20);
-						  p5.resizeCanvas(getDim(),getDim());
-						}
-					</code></pre>
+        <section>
+					<iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
 				</section>
 				<section>
 					<pre><code data-trim class="javascript stretch">
@@ -444,9 +450,8 @@ new p5(sketch);</code></pre>
 
 						function drawLines(note) {
 						  Object.keys(note.lines).forEach(noteAttribute => {
-								const l = note.lines[noteAttribute]
-						    p5.stroke(colors.foreground).strokeWeight(1);
-						    drawLine(l.end1,l.end2);
+								const line = note.lines[noteAttribute]
+						    drawLine(line.end1,line.end2);
 						  });
 						}
 
@@ -469,7 +474,7 @@ new p5(sketch);</code></pre>
 					      audio.playNote(note,delay);
 					      delay += note.duration;
 					      drawNote(instrument,note,true,false);
-					      drawLines(note);
+					      drawAttributeLines(note);
 					    });
 
 							Object.keys(score).forEach(inst => {
@@ -482,6 +487,110 @@ new p5(sketch);</code></pre>
 				</section>
 				<section>
 					<iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
+				</section>
+				<section>
+					<h1>3. Putting it all together</h1>
+				</section>
+				<section>
+					<pre><code class="javascript">
+						function setupNote(note) {
+						  note.duration = Math.min(note.duration,note.sample.duration() * 1 / note.pitchAdjust);
+
+						  const env = new P5.Env();
+						  note.sample.amp(env);
+						  note.envelope = env;
+
+						  const amp = new P5.Amplitude();
+						  amp.setInput(note.sample);
+						  note.curAmplitude = amp;
+						}
+					</code></pre>
+
+				</section>
+				<section>
+					<section>
+						<pre><code class="javascript" data-trim>
+							function drawNote(instrument,note,attrColors,liveUpdate) {
+							  Object.keys(note.lines).forEach(noteAttribute => {
+									p5.strokeWeight(note.curAmplitude.getLevel() * 100);
+						      p5.stroke(getNoteHueValue(note),100,100,note.amplitude);
+
+							    drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
+							  });
+							}
+
+							function getNoteHueValue(note) {
+							  return 371 / (1 + Math.pow(Math.E,(56 - audioUtils.noteToValue(note)) / 10)) - 4;
+							}
+						</code></pre>
+					</section>
+					<section>
+						<h2>Bonus Math Detour: Sigmoid Curve</h2>
+						<img class="stretch" src="/static/line.png"/>
+					</section>
+					<section>
+						<h2>Bonus Math Detour: Sigmoid Curve</h2>
+						<img class="stretch" src="/static/sigmoid.png"/>
+					</section>
+				</section>
+				<section>
+					<pre><code class="javascript">
+						function drawLiveScore() {
+						  Object.keys(score).forEach(instrument => {
+						    score[instrument].notes.forEach(note => {
+						      if (note.isActive) {
+						        drawNote(instrument,note,false,true);
+						      }
+						    });
+						  });
+						}
+					</code></pre>
+				</section>
+				<section>
+					<pre><code data-trim class="javascript">
+						function getPhrase(instrument,note,pattern) {
+						  return new P5.Phrase(
+						    getPhraseName(instrument,note),
+						    (time,rate) => {
+						      playNote(note,time,rate);
+						    },
+						    pattern
+						  );
+						}
+
+						function getPhraseName(instrument,note) {
+						  return instrument + note.pitch + note.octave + note.amplitude;
+						}
+					</code></pre>
+				</section>
+				<section>
+					<pre class="stretch"><code data-trim class="javascript">
+						function playScore(p5,score) {
+						  const playPart = new P5.Part(16);
+						  playPart.loop();
+						  playPart.setBPM(10);
+
+						  const zeroPattern = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+						  let noteOffset = 0;
+						  Object.keys(score).forEach(instrument => {
+						    score[instrument].notes.forEach(note => {
+						      const pattern = zeroPattern.slice();
+						      pattern[noteOffset++ % 16] = 1;
+
+						      setTimeout(() => {
+						          playPart.addPhrase(getPhrase(instrument,note,pattern));
+						        }, note.delay * 1000
+						      );
+						    });
+						  });
+							removePhrases();
+
+						  playPart.start();
+						}
+					</code></pre>
+				</section>
+				<section>
+					<iframe data-src="http://localhost:8080" class="stretch"></iframe>
 				</section>
       </div>
     </div>
