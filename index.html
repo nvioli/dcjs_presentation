@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-    <title>reveal.js</title>
+    <title>Javascript for Sound Art</title></title>
 
     <link rel="stylesheet" href="css/reveal.css">
     <link rel="stylesheet" href="css/theme/black.css">
@@ -29,8 +29,9 @@
       <div class="slides">
         <section data-background-iframe="http://localhost:8080/background.html" data-background-interactive>
           <h1>Web Audio & Visualizations with <span style="color:#ed225d">P5.js</span></h1>
-          <h3>Nick Violi / dcjs / 9.14.2017</h3>
-          <a href="javascript:void(0)" onclick="Reveal.slide(document.getElementsByClassName('slides')[0].childNodes.length)">last slide</a>
+          <h3>Nick Violi / <span style="    text-transform: initial;">GlobalGiving</span></h3>
+          <h4>dcjs 9.14.2017</h4>
+          <!-- <a href="javascript:void(0)" onclick="Reveal.slide(document.getElementsByClassName('slides')[0].childNodes.length)">last slide</a> -->
         </section>
 				<section>
 					<img data-src="/static/v.jpg" class="stretch" />
@@ -38,12 +39,12 @@
         <section>
           <h1>1. Sound</h1>
         </section>
-        <section>
+        <!-- <section>
           <iframe data-src="https://teropa.info/blog/2016/07/28/javascript-systems-music.html" class="stretch"></iframe>
           <aside class="notes">
             About a year ago, I read this fascinating blog post which inspired me to talk to you all tonight. The author, a Finnish developer named Tero Parviainen, used javascript to recreate the works of two of my favorite composers, Steve Reich and Brian Eno, so I instantly knew it was for me. Referring back to it to put together this presentation, I noticed that I never got to the third chapter because I was so excited about the second one that I immediately started building what I’m going to show you tonight.
           </aside>
-        </section>
+        </section> -->
         <section>
           <iframe data-src="http://localhost:8080/repeat.html" class="stretch"></iframe>
           <aside class="notes">
@@ -139,20 +140,19 @@
         </section>
         <section>
           <h2 style="margin:0;">Math to the rescue!</h2>
-          <img data-src="/static/scale.png"/>
           <div class="fragment">
             <p style="margin:0px;font-size:75%;">One octave change:</p>
-            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2 ✕ frequency</p>
+            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2 ✕ frequency<span class="fragment"> = 2 ✕ speed</span></p>
           </div>
 
           <div class="fragment">
             <p style="margin-bottom:0px;font-size:75%;">So <em>m</em> octave changes:</p>
-            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-25px;">2<sup><em>m</em></sup> ✕ frequency</p>
+            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-25px;">2<sup><em>m</em></sup> ✕ speed</p>
           </div>
 
           <div class="fragment">
             <p style="margin-bottom:0px;font-size:75%;">There are 12 equal-spaced notes per octave, so to move by <em>n</em> notes:</p>
-            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2<sup><em>n</em>/12</sup> ✕ frequency</p>
+            <p style="font-weight:800;text-align:center;font-size:140%;margin-top:-10px;">2<sup><em>n</em>/12</sup> ✕ speed</p>
           </div>
           <aside class="notes">
             The most common way to tune instruments in the western tradition is called the equal temperament system, because all the notes are an equal distance from each other. Furthermore, to move from a note to the same note in the next octave, you simply double the frequency. There are 12 notes in an octave, so the bottom formula here gives the relationship between two notes m semitones apart. Therefore, if we adjust the speed of a sample by precisely that amount, the resulting playback will be exactly the desired note!
@@ -179,40 +179,44 @@
           </aside>
         </section>
         <section>
-          <pre><code data-trim class="javascript" contenteditable="true">
-						function preloadNote(p5,instrument,note,cb) {
-						  const nearestSample = audioUtils.getNearestSample(instrument,note);
-							const noteDistance = audioUtils.getNoteDistance(note,nearestSample);
-						  note.pitchAdjust = audioUtils.getPlaybackRate(noteDistance);
+          <section>
+            <pre><code data-trim class="stretch javascript" contenteditable="true">
+  						function preloadNote(p5,instrument,note) {
+  						  const nearestSample = getNearestSample(instrument,note);
+  							const noteDistance = getNoteDistance(note,nearestSample);
+  						  note.pitchAdjust = getPlaybackRate(noteDistance);
 
-						  note.sample = p5.loadSound(nearestSample.file, cb);
-						}
-          </code></pre>
+  						  note.sample = p5.loadSound(nearestSample.file, () => {
+  						    setupNote(note)
+  						  });
+  						}
+
+  						function setupNote(note) {
+  						  const env = new P5.Env();
+
+  						  //env.setADSR(attackTime, decayTime, susPercent, releaseTime);
+  						  env.setADSR(0.001, 0.2, note.amplitude, note.duration);
+  						  //setRange(attackLevel,releaseLevel)
+  						  env.setRange(note.amplitude, 0);
+
+  						  note.sample.amp(env);
+  						}
+            </code></pre>
+          </section>
+          <section>
+						<img data-src="/static/adsr.jpg" class="stretch"/>
+					</section>
           <aside class="notes">
             This function abstracts all the hard work of playing an arbitrary note: first, we get the sample nearest to the desired note, and calculate the pitch adjustment. Then we use the P5 library to load the sample into the user’s browser. The loadSound function accepts a callback function, which we use to set up some more details about the note: we make sure we’re not trying to play the note for longer than the sample’s duration, and then we create two more P5 objects and attach them to the note. The Envelope (P5.Env) makes it easier to define the note’s volume function, and the Amplitude (P5.Amplitude) lets us read the volume at any point during the sample’s playback (there’s not a one-to-one correspondence between the two because of the natural variations in the samples from being played by a human).
           </aside>
         </section>
         <section>
-					<section>
-						<pre><code data-trim class="javascript" contenteditable="true">
-	            function playNote(note,delay) {
-                const env = new P5.Env();
-  						  note.sample.amp(env);
-  						  note.envelope = env;
-
-                //env.setADSR(attackTime, decayTime, susPercent, releaseTime);
-	              note.envelope.setADSR(delay + 0.001, 0.2, note.amplitude, note.duration);
-	              //setRange(attackLevel,releaseLevel)
-                note.envelope.setRange(note.amplitude, 0);
-
-	              note.sample.play(delay,note.pitchAdjust);
-	              note.envelope.play(note.sample);
-	            }
-	          </code></pre>
-					</section>
-					<section>
-						<img data-src="/static/adsr.jpg" class="stretch"/>
-					</section>
+					<pre><code data-trim class="javascript" contenteditable="true">
+            function playNote(note,delay) {
+              note.sample.play(delay,note.pitchAdjust);
+              note.envelope.play(note.sample);
+            }
+          </code></pre>
           <aside class="notes">
             Now playing the note is as simple as setting a few settings on the note’s envelope, then starting the sample and the envelope.
           </aside>
@@ -232,19 +236,20 @@
           <h1>2. Visuals</h1>
         </section>
         <section>
-          <pre><code data-trim class="javascript" contenteditable="true">
-						<script src="/static/p5.js"></script>
+          <div class="livecode stretch no-console">
+            <pre><code data-trim class="javascript" contenteditable="true">function setup() {
 
-						<script type="text/javascript">
-	            function setup() {
+}
 
-	            }
-
-	            function draw() {
-	              ellipse(50, 50, 80, 80);
-	            }
-						</script>
-          </code></pre>
+function draw() {
+  ellipse(50, 50, 80, 80);
+}
+            </code></pre>
+            <pre><code data-trim class="html">
+              <style>canvas {border: 1px solid black;}</style>
+              <script src="/static/p5.js"></script>
+            </code></pre>
+          </div>
         </section>
 				<section>
           <h2>Instance Mode</h2>
@@ -256,7 +261,7 @@
   }
 }
 
-new p5(sketch,'container');</code></pre>
+new p5(sketch);</code></pre>
 						<pre><code class="html">
               <style>canvas {border: 1px solid black;}</style>
               <script src="/static/p5.js"></script>
@@ -275,7 +280,7 @@ new p5(sketch,'container');</code></pre>
 						  }
 						}
 
-						new P5(sketch,'container');
+						new P5(sketch);
 					</code></pre>
         </section>
         <section>
@@ -283,6 +288,7 @@ new p5(sketch,'container');</code></pre>
           <pre><code data-trim class="javascript" contenteditable="true">
             p5.fill(r,g,b,[alpha]);
             p5.fill(#abcdef,[alpha]);
+            p5.stroke('chartreuse');
 
             p5.colorMode(p5.HSB);
             p5.stroke(h,s,b,[alpha]);
@@ -381,36 +387,66 @@ new p5(sketch);</code></pre>
 				</section>
 				<section>
 					<pre><code data-trim class="javascript stretch">
-						let instruments = utils.shuffle(Object.keys(library.samples));
+            let instruments = utils.shuffle(Object.keys(library.samples));
 
-						const pointSheet = {};
-						pointSheet[instruments[0]] = {point: {x:86.763980938818,y:45.6838472914499,1}};
-						pointSheet[instruments[1]] = {point: {x:57.3588212740319,y:84.2909568932464,1}};
-						//...
-						pointSheet[instruments[13]] = {point: {x:84.9756257873692,y:76.4556060689051,4}};
-						pointSheet[instruments[14]] = {point: {x:68.8859067754834,y:29.5557868214931,4}};
+            const pointSheet = {};
+            pointSheet[instruments[0]] = {point: {x:86.76,y:45.68,1}};
+            pointSheet[instruments[1]] = {point: {x:57.35,y:84.29,1}};
+            //...
+            pointSheet[instruments[13]] = {point: {x:84.97,y:76.45,4}};
+            pointSheet[instruments[14]] = {point: {x:68.88,y:29.55,4}};
 
-						const lineSheets = [
-					  [
-					    [{x:0,y:37.2330444106872},{x:100,y:51.5347153963006}],
-					    [{x:43.0632630410655,y:0},{x:37.7500177108178,y:100}],
-					    [{x:66.3494462417645,y:0},{x:44.277044418731,y:100}],
-					    [{x:100,y:17.6235367706192},{x:36.4063570028574,y:100}],
-					    [{x:20.6295605355751,y:100},{x:0,y:55.7233491198284}]
-					  ],[
-					    [{x:71.4335292212299,y:0},{x:0,y:56.8762741100831}],
-					    [{x:0,y:29.1852416048747},{x:45.7591041599186,y:100}],
-					    [{x:0,y:54.3246936535317},{x:100,y:86.496113264186}],
-					    [{x:0,y:63.5654920585139},{x:100,y:35.0030242612962}],
-					    [{x:97.8483179862107,y:0},{x:65.3926241266022,y:100}]
-					  ],
-						//etc.
+            const lineSheets = [
+            [
+              [{x:0,y:37.23},{x:100,y:51.53}],
+              [{x:43.06,y:0},{x:37.75,y:100}],
+              [{x:66.34,y:0},{x:44.27,y:100}],
+              [{x:100,y:17.62},{x:36.40,y:100}],
+              [{x:20.62,y:100},{x:0,y:55.72}]
+            ],[
+              [{x:71.43,y:0},{x:0,y:56.87}],
+              [{x:0,y:29.18},{x:45.75,y:100}],
+              [{x:0,y:54.32},{x:100,y:86.49}],
+              [{x:0,y:63.56},{x:100,y:35.00}],
+              [{x:97.84,y:0},{x:65.39,y:100}]
+            ],
+            //etc.
 					</code></pre>
 				</section>
-				<section>
+        <section>
+					<iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
+				</section>
+        <section>
 					<iframe data-src="https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line" class="stretch"></iframe>
 				</section>
 				<section>
+					<pre><code data-trim class="javascript stretch">
+						function normalize(v) {
+						  const dim = Math.min(p5.windowWidth / 2,p5.windowHeight);
+						  return p5.map(v,0,100,0,dim);
+						}
+
+						function drawLine(p1,p2) {
+						  p5.line(normalize(p1.x),normalize(p1.y),normalize(p2.x),normalize(p2.y));
+						}
+
+						function drawLines(note) {
+						  Object.keys(note.lines).forEach(noteAttribute => {
+								const line = note.lines[noteAttribute]
+						    drawLine(line.end1,line.end2);
+						  });
+						}
+
+						function drawNote(instrument,note) {
+						  Object.keys(note.lines).forEach(noteAttribute => {
+						    p5.stroke(colors[noteAttribute]);
+						    p5.strokeWeight(note.amplitude * 20);
+						    drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
+						  });
+						}
+					</code></pre>
+				</section>
+        <section>
 					<pre><code data-trim class="javascript stretch">
 						function getNoteFromDistance(instrument,dist) {
 						  const [low,high] = audioUtils.getSampleRange(instrument);
@@ -435,53 +471,27 @@ new p5(sketch);</code></pre>
 						}
 					</code></pre>
 				</section>
-        <section>
-					<iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
-				</section>
-				<section>
-					<pre><code data-trim class="javascript stretch">
-						function normalize(v) {
-						  return p5.map(v,0,100,0,getDim());
-						}
-
-						function drawLine(p1,p2) {
-						  p5.line(normalize(p1.x),normalize(p1.y),normalize(p2.x),normalize(p2.y));
-						}
-
-						function drawLines(note) {
-						  Object.keys(note.lines).forEach(noteAttribute => {
-								const line = note.lines[noteAttribute]
-						    drawLine(line.end1,line.end2);
-						  });
-						}
-
-						function drawNote(instrument,note) {
-						  Object.keys(note.lines).forEach(noteAttribute => {
-						    p5.stroke(colors[noteAttribute]);
-						    p5.strokeWeight(note.amplitude * 20);
-						    drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
-						  });
-						}
-					</code></pre>
-				</section>
 				<section>
 					<pre><code data-trim class="javascript stretch">
 						p5.draw ≈ () => {
 							p5.background(colors.background);
 
-							let delay = 0;
-					    score[instrument].notes.forEach(note => {
-					      audio.playNote(note,delay);
-					      delay += note.duration;
-					      drawNote(instrument,note,true,false);
-					      drawAttributeLines(note);
+              //draw all notes
+							Object.keys(score).forEach(inst => {
+							  const point = score[inst].point;
+							  p5.strokeWeight(point.size * 4);
+							  p5.ellipse(normalize(point.x),normalize(point.y),point.size * 4);
 					    });
 
-							Object.keys(score).forEach(inst => {
-					      const point = score[inst].point;
-					      p5.strokeWeight(point.size * 4);
-					      p5.ellipse(normalize(point.x),normalize(point.y),point.size * 4);
-					    });
+              //draw the lines for this note and play it
+							let delay = 0;
+							score[instrument].notes.forEach(note => {
+                drawNote(instrument,note);
+							  drawLines(note);
+
+							  audio.playNote(note,delay);
+							  delay += note.duration;
+							});
 						}
 					</code></pre>
 				</section>
@@ -491,29 +501,56 @@ new p5(sketch);</code></pre>
 				<section>
 					<h1>3. Putting it all together</h1>
 				</section>
+        <section>
+          <iframe data-src="http://localhost:8080/repeat.html" class="stretch"></iframe>
+        </section>
 				<section>
-					<pre><code class="javascript">
-						function setupNote(note) {
-						  note.duration = Math.min(note.duration,note.sample.duration() * 1 / note.pitchAdjust);
+					<pre><code data-trim class="javascript">
+            function setupNote(note) {
+              const env = new P5.Env();
 
-						  const env = new P5.Env();
-						  note.sample.amp(env);
-						  note.envelope = env;
+              //env.setADSR(attackTime, decayTime, susPercent, releaseTime);
+              env.setADSR(0.001, 0.2, note.amplitude, note.duration);
+              //setRange(attackLevel,releaseLevel)
+              env.setRange(note.amplitude, 0);
 
-						  const amp = new P5.Amplitude();
-						  amp.setInput(note.sample);
-						  note.curAmplitude = amp;
-						}
+              note.sample.amp(env);
+
+              //an addition:
+              const amp = new P5.Amplitude();
+              amp.setInput(note.sample);
+              note.curAmplitude = amp;
+            }
 					</code></pre>
-
 				</section>
+        <section>
+          <pre><code class="javascript stretch" data-trim>
+            function playNote(note,delay,rate) {
+              note.sample.play(delay,(rate || 1) * note.pitchAdjust);
+              note.envelope.play(note.sample);
+
+              //new:
+              setTimeout(
+                () => {note.isActive = true;},
+                delay * 1000
+              );
+
+              setTimeout(
+                () => {note.isActive = false;},
+                (delay + note.duration) * 1000
+              );
+            }
+          </code></pre>
+        </section>
 				<section>
 					<section>
-						<pre><code class="javascript" data-trim>
+						<pre><code class="javascript stretch " data-trim>
 							function drawNote(instrument,note,attrColors,liveUpdate) {
 							  Object.keys(note.lines).forEach(noteAttribute => {
+                  //vary the weight based on the sample's amplitude
 									p5.strokeWeight(note.curAmplitude.getLevel() * 100);
-						      p5.stroke(getNoteHueValue(note),100,100,note.amplitude);
+                  //color it accordint to its pitch
+									p5.stroke(getNoteHueValue(note),100,100,note.amplitude);
 
 							    drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
 							  });
@@ -534,7 +571,7 @@ new p5(sketch);</code></pre>
 					</section>
 				</section>
 				<section>
-					<pre><code class="javascript">
+					<pre><code data-trim class="javascript">
 						function drawLiveScore() {
 						  Object.keys(score).forEach(instrument => {
 						    score[instrument].notes.forEach(note => {
@@ -546,48 +583,55 @@ new p5(sketch);</code></pre>
 						}
 					</code></pre>
 				</section>
+        <section>
+          <h1>Phrase, Part, Score</h1>
+        </section>
 				<section>
 					<pre><code data-trim class="javascript">
 						function getPhrase(instrument,note,pattern) {
 						  return new P5.Phrase(
-						    getPhraseName(instrument,note),
+						    instrument + note.pitch + note.octave
 						    (time,rate) => {
 						      playNote(note,time,rate);
 						    },
 						    pattern
 						  );
 						}
-
-						function getPhraseName(instrument,note) {
-						  return instrument + note.pitch + note.octave + note.amplitude;
-						}
 					</code></pre>
 				</section>
 				<section>
-					<pre class="stretch"><code data-trim class="javascript">
-						function playScore(p5,score) {
-						  const playPart = new P5.Part(16);
-						  playPart.loop();
-						  playPart.setBPM(10);
+          <section>
+  					<pre class="stretch"><code data-trim class="javascript">
+  						function playScore(p5,score) {
+  						  const playPart = new P5.Part(16);
+  						  playPart.loop();
+  						  playPart.setBPM(10);
 
-						  const zeroPattern = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-						  let noteOffset = 0;
-						  Object.keys(score).forEach(instrument => {
-						    score[instrument].notes.forEach(note => {
-						      const pattern = zeroPattern.slice();
-						      pattern[noteOffset++ % 16] = 1;
+  						  Object.keys(score).forEach(instrument => {
+  						    score[instrument].notes.forEach(note => {
+  						      setTimeout(() => {
+  						          playPart.addPhrase(getPhrase(instrument,note,getPattern()));
+  						        }, note.delay * 1000
+  						      );
+  						    });
+  						  });
+  							//remove the phrases in the reverse order they were added
+  							removePhrases();
 
-						      setTimeout(() => {
-						          playPart.addPhrase(getPhrase(instrument,note,pattern));
-						        }, note.delay * 1000
-						      );
-						    });
-						  });
-							removePhrases();
-
-						  playPart.start();
-						}
-					</code></pre>
+  						  playPart.start();
+  						}
+  					</code></pre>
+          </section>
+          <section>
+            <pre class="stretch"><code data-trim class="javascript">
+              const zeroPattern = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+              let noteOffset = 0;
+              function getPattern() {
+                const pattern = zeroPattern.slice();
+                pattern[noteOffset++ % 16] = 1;
+              }
+            </code></pre>
+          </section>
 				</section>
 				<section>
 					<iframe data-src="http://localhost:8080" class="stretch"></iframe>
