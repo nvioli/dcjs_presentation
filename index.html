@@ -416,9 +416,58 @@ new p5(sketch);</code></pre>
         <section>
 					<iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
 				</section>
-        <section>
-					<iframe data-src="https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line" class="stretch"></iframe>
-				</section>
+            <section>
+               <pre><code data-trim contenteditable class="javascript stretch">
+                  function getAttributeLines(point,sheet) {
+                    utils.shuffle(sheet);
+
+                    return {
+                      lowestFreq: getLineDetails(point,sheet[0]),
+                      overtone: getLineDetails(point,sheet[1]),
+                      amplitude: getLineDetails(point,sheet[2]),
+                      duration: getLineDetails(point,sheet[3]),
+                      occurence: getLineDetails(point,sheet[4])
+                    };
+                  }
+
+                  function getLineDetails(point,lineEnds) {
+                    const [end1,end2] = lineEnds.slice();
+                    const line = geom.getLine(end1,end2);
+
+                    return {
+                      end1,
+                      end2,
+                      distance: geom.distanceFrom(point,line),
+                      intersection: geom.perpindicularIntersectionPoint(point,line)
+                    };
+                  }
+               </code></pre>
+            </section>
+            <section>
+    					<iframe data-src="https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line" class="stretch"></iframe>
+    				</section>
+            <section>
+    					<pre><code data-trim contenteditable class="javascript stretch">
+    						//returned object forms the basis of the `note`
+    						function getNoteAttributes(instrument,point,sheet) {
+                       const lines = getAttributeLines(point,sheet);
+
+    						  const [low,high] = audioUtils.getSampleRange(instrument);
+    						  const noteVal =
+                         low + (high - low) * lines.lowestFreq.distance / 100;
+    						  const lowestFreq = audioUtils.valueToNote(noteVal);
+
+    						  return {
+    						    lines, //contains geometric info; other properties contain all the note info
+    						    pitch: lowestFreq.pitch,
+    						    octave: lowestFreq.octave,
+    						    delay: lines.occurence.distance,
+    						    amplitude: lines.amplitude.distance / 100,
+    						    duration: lines.duration.distance / 10
+    						  };
+    						}
+    					</code></pre>
+    				</section>
 				<section>
 					<pre><code data-trim class="javascript stretch">
 						function normalize(v) {
@@ -430,44 +479,19 @@ new p5(sketch);</code></pre>
 						  p5.line(normalize(p1.x),normalize(p1.y),normalize(p2.x),normalize(p2.y));
 						}
 
-						function drawLines(note) {
-						  Object.keys(note.lines).forEach(noteAttribute => {
-								const line = note.lines[noteAttribute]
+						function drawAttributeLines(note) {
+						  Object.keys(note.lines).forEach(attributeLine => {
+								const line = note.lines[attributeLine]
 						    drawLine(line.end1,line.end2);
 						  });
 						}
 
 						function drawNote(instrument,note) {
-						  Object.keys(note.lines).forEach(noteAttribute => {
-						    p5.stroke(colors[noteAttribute]);
+						  Object.keys(note.lines).forEach(attributeLine => {
+						    p5.stroke(colors[attributeLine]);
 						    p5.strokeWeight(note.amplitude * 20);
-						    drawLine(score[instrument].point,note.lines[noteAttribute].intersection);
+						    drawLine(score[instrument].point,note.lines[attributeLine].intersection);
 						  });
-						}
-					</code></pre>
-				</section>
-        <section>
-					<pre><code data-trim class="javascript stretch">
-						function getNoteFromDistance(instrument,dist) {
-						  const [low,high] = audioUtils.getSampleRange(instrument);
-						  const instrumentRange = audioUtils.getNoteDistance(high,low);
-
-						  const proportion = instrumentRange * dist / 100;
-						  const noteVal = Math.floor(audioUtils.noteToValue(low) + proportion);
-						  return audioUtils.valueToNote(noteVal);
-						}
-
-						//returned object forms the basis of the `note`
-						function getNoteAttributes(instrument,lines) {
-						  const noteInfo = audio.getNoteFromDistance(instrument,lines.lowestFreq.distance);
-						  return {
-						    lines,
-						    pitch: noteInfo.pitch,
-						    octave: noteInfo.octave,
-						    delay: lines.occurence.distance,
-						    amplitude: lines.amplitude.distance / 100,
-						    duration: lines.duration.distance / 10
-						  };
 						}
 					</code></pre>
 				</section>
@@ -476,23 +500,26 @@ new p5(sketch);</code></pre>
 						p5.draw ≈ () => {
 							p5.background(colors.background);
 
-              //draw all notes
+                     let delay = 0;
 							Object.keys(score).forEach(inst => {
 							  const point = score[inst].point;
 							  p5.strokeWeight(point.size * 4);
+                       //draw a circle for the instrument:
 							  p5.ellipse(normalize(point.x),normalize(point.y),point.size * 4);
+
+         							score[instrument].notes.forEach(note => {
+                           //draw the colored lines to visualize the note:
+                         drawNote(instrument,note);
+                         //draw the attribute lines:
+         							  drawAttributeLines(note);
+
+//play the note:
+         							  audio.playNote(note,delay);
+         							  delay += note.duration;
+         							});
+         						}
 					    });
 
-              //draw the lines for this note and play it
-							let delay = 0;
-							score[instrument].notes.forEach(note => {
-                drawNote(instrument,note);
-							  drawLines(note);
-
-							  audio.playNote(note,delay);
-							  delay += note.duration;
-							});
-						}
 					</code></pre>
 				</section>
 				<section>
@@ -523,29 +550,10 @@ new p5(sketch);</code></pre>
             }
 					</code></pre>
 				</section>
-        <section>
-          <pre><code class="javascript stretch" data-trim>
-            function playNote(note,delay,rate) {
-              note.sample.play(delay,(rate || 1) * note.pitchAdjust);
-              note.envelope.play(note.sample);
-
-              //new:
-              setTimeout(
-                () => {note.isActive = true;},
-                delay * 1000
-              );
-
-              setTimeout(
-                () => {note.isActive = false;},
-                (delay + note.duration) * 1000
-              );
-            }
-          </code></pre>
-        </section>
-				<section>
+            <section>
 					<section>
 						<pre><code class="javascript stretch " data-trim>
-							function drawNote(instrument,note,attrColors,liveUpdate) {
+							function drawNote(instrument,note) {
 							  Object.keys(note.lines).forEach(noteAttribute => {
                   //vary the weight based on the sample's amplitude
 									p5.strokeWeight(note.curAmplitude.getLevel() * 100);
@@ -570,13 +578,32 @@ new p5(sketch);</code></pre>
 						<img class="stretch" src="/static/sigmoid.png"/>
 					</section>
 				</section>
+        <section>
+          <pre><code class="javascript stretch" data-trim>
+            function playNote(note,delay,rate) {
+              note.sample.play(delay,(rate || 1) * note.pitchAdjust);
+              note.envelope.play(note.sample);
+
+              //new:
+              setTimeout(
+                () => {note.isActive = true;},
+                delay * 1000
+              );
+
+              setTimeout(
+                () => {note.isActive = false;},
+                (delay + note.duration) * 1000
+              );
+            }
+          </code></pre>
+        </section>
 				<section>
 					<pre><code data-trim class="javascript">
 						function drawLiveScore() {
 						  Object.keys(score).forEach(instrument => {
 						    score[instrument].notes.forEach(note => {
 						      if (note.isActive) {
-						        drawNote(instrument,note,false,true);
+						        drawNote(instrument,note);
 						      }
 						    });
 						  });
@@ -604,8 +631,7 @@ new p5(sketch);</code></pre>
   					<pre class="stretch"><code data-trim class="javascript">
   						function playScore(p5,score) {
   						  const playPart = new P5.Part(16);
-  						  playPart.loop();
-  						  playPart.setBPM(10);
+  						  playPart.loop().setBPM(10);
 
   						  Object.keys(score).forEach(instrument => {
   						    score[instrument].notes.forEach(note => {
@@ -615,22 +641,17 @@ new p5(sketch);</code></pre>
   						      );
   						    });
   						  });
-  							//remove the phrases in the reverse order they were added
-  							removePhrases();
 
   						  playPart.start();
   						}
+
+                  const zeroPattern = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+                 let noteOffset = 0;
+                 function getPattern() {
+                   const pattern = zeroPattern.slice();
+                   pattern[noteOffset++ % 16] = 1;
+                 }
   					</code></pre>
-          </section>
-          <section>
-            <pre class="stretch"><code data-trim class="javascript">
-              const zeroPattern = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-              let noteOffset = 0;
-              function getPattern() {
-                const pattern = zeroPattern.slice();
-                pattern[noteOffset++ % 16] = 1;
-              }
-            </code></pre>
           </section>
 				</section>
 				<section>
