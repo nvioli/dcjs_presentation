@@ -387,15 +387,18 @@ new p5(sketch);</code></pre>
           <img data-src="/static/transparency.png" class="stretch" style="background:white;"/>
         </section>
         <section>
+          <iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
+        </section>
+        <section>
           <pre><code data-trim class="javascript stretch">
             let instruments = utils.shuffle(Object.keys(library.samples));
 
             const pointSheet = {};
-            pointSheet[instruments[0]] = {point: {x:86.76,y:45.68,1}};
-            pointSheet[instruments[1]] = {point: {x:57.35,y:84.29,1}};
+            pointSheet[instruments[0]] = {point: {x:86.76,y:45.68,size:1}};
+            pointSheet[instruments[1]] = {point: {x:57.35,y:84.29,size:1}};
             //...
-            pointSheet[instruments[13]] = {point: {x:84.97,y:76.45,4}};
-            pointSheet[instruments[14]] = {point: {x:68.88,y:29.55,4}};
+            pointSheet[instruments[13]] = {point: {x:84.97,y:76.45,size:4}};
+            pointSheet[instruments[14]] = {point: {x:68.88,y:29.55,size:4}};
 
             const lineSheets = [
             [
@@ -413,9 +416,6 @@ new p5(sketch);</code></pre>
             ],
             //etc.
           </code></pre>
-        </section>
-        <section>
-          <iframe data-src="http://localhost:8080/drawNotes.html" class="stretch"></iframe>
         </section>
             <section>
                <pre><code data-trim contenteditable class="javascript stretch">
@@ -498,7 +498,7 @@ new p5(sketch);</code></pre>
         </section> -->
         <section>
           <pre><code data-trim class="javascript stretch">
-            p5.draw ≈ () => {
+            p5.draw = () => {
               p5.background(colors.background);
 
               let delay = 0;
